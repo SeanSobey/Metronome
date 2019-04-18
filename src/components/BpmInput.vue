@@ -26,7 +26,10 @@ interface BpmInputData {
   bpm: number;
   bpmMin: number;
   bpmMax: number;
+  taps: Array<number>
 }
+
+const tapTimeout = 1000 * 4;
 
 @Component
 export default class BpmInput extends Vue {
@@ -36,7 +39,8 @@ export default class BpmInput extends Vue {
     return {
       bpm: 100,
       bpmMin: 10,
-      bpmMax: 300
+	  bpmMax: 300,
+	  taps: [],
     };
   }
 
@@ -68,6 +72,24 @@ export default class BpmInput extends Vue {
   public tapBpm(event: MouseEvent): void {
     const target = event.target as HTMLButtonElement;
     target.blur();
+
+    const data = this.$data as BpmInputData;
+    const now = new Date().getTime();
+    if (data.taps.length > 0 && now - data.taps[data.taps.length - 1] > tapTimeout    ) {
+      data.taps = [];
+      data.bpm = 100;
+    }
+    data.taps.push(now);
+    if (data.taps.length === 1) {
+      return;
+    }
+    const tapsDifference = [];
+    for (let index = 1; index < data.taps.length; index++) {
+      tapsDifference.push(data.taps[index] - data.taps[index - 1]);
+    }
+    const avg = tapsDifference.reduce((a, b) => a + b) / tapsDifference.length;
+    data.bpm = Math.round((1000 * 60) / avg);
+    //Tone.Transport.bpm.value = data.bpm;
   }
 }
 </script>
