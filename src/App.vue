@@ -22,29 +22,9 @@
 					<label>0:00:00</label>
 				</h2>
 				<!-- Playback Controls -->
-				<b-button-group size="lg" class="m-2">
-					<b-button variant="primary" v-b-tooltip.hover title="Play">
-						<font-awesome-icon icon="play"/>
-					</b-button>
-					<b-button variant="primary" v-b-tooltip.hover title="Stop">
-						<font-awesome-icon icon="stop"/>
-					</b-button>
-					<b-button variant="primary" v-b-tooltip.hover title="Pause">
-						<font-awesome-icon icon="pause"/>
-					</b-button>
-				</b-button-group>
+				<PlaybackInput></PlaybackInput>
 				<!-- Volume Controls -->
-				<b-button-group size="lg" class="m-2">
-					<b-button variant="primary" v-b-tooltip.hover title="Volume Down">
-						<font-awesome-icon icon="volume-down"/>
-					</b-button>
-					<b-button variant="primary" v-b-tooltip.hover title="Volume Up">
-						<font-awesome-icon icon="volume-up"/>
-					</b-button>
-					<b-button variant="primary" v-b-tooltip.hover title="Volume Off">
-						<font-awesome-icon icon="volume-off"/>
-					</b-button>
-				</b-button-group>
+				<VolumeInput></VolumeInput>
 				<hr>
 				<!-- BPM -->
 				<BpmInput class="my-4"></BpmInput>
@@ -53,8 +33,8 @@
 			</b-jumbotron>
 
 			<!--
-		<img alt="Vue logo" src="./assets/logo.png">
-		<HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+			<img alt="Vue logo" src="./assets/logo.png">
+			<HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
 			-->
 		</div>
 	</div>
@@ -63,14 +43,17 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 // import HelloWorld from "./components/HelloWorld.vue";
+import PlaybackInput from './components/PlaybackInput.vue';
+import VolumeInput from './components/VolumeInput.vue';
 import BpmInput from './components/BpmInput.vue';
 import BpmRampInput from './components/BpmRampInput.vue';
 import Tone from 'tone';
-import { foo } from './test';
 
 @Component({
 	components: {
 		// HelloWorld,
+		PlaybackInput,
+		VolumeInput,
 		BpmInput,
 		BpmRampInput,
 	},
