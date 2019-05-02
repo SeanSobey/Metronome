@@ -1,4 +1,4 @@
-export default class {
+export default class Formatter {
 	public static bpm(value: number, event?: Event): string {
 
 		const bpm = value.toString(10);
