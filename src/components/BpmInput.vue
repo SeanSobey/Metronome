@@ -45,7 +45,7 @@ const tapTimeout = 1000 * 4;
 		formatBpm: Formatter.bpm,
 	},
 })
-export default class extends Vue {
+export default class BpmInput extends Vue {
 	@Prop() private readonly msg!: string;
 
 	public data(): Data {

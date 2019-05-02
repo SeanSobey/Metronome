@@ -29,7 +29,7 @@ interface Data {
 }
 
 @Component({})
-export default class extends Vue {
+export default class CompoundNumberInput extends Vue {
 	@Prop() public value!: number;
 	@Prop() public min!: number;
 	@Prop() public max!: number;

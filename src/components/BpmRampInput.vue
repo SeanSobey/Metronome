@@ -56,7 +56,7 @@ interface Data {
 		formatBpm: Formatter.bpm,
 	},
 })
-export default class extends Vue {
+export default class BpmRampInput extends Vue {
 	public data(): Data {
 		return {
 			bpmFrom: 100,

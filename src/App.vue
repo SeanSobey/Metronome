@@ -31,7 +31,6 @@
 				<BpmRampInput class="my-4"></BpmRampInput>
 				<br>
 			</b-jumbotron>
-
 			<!--
 			<img alt="Vue logo" src="./assets/logo.png">
 			<HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
