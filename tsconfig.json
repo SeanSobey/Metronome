@@ -16,6 +16,7 @@
       "mocha",
       "chai",
       "tone",
+      "jquery",
       "@fortawesome/free-solid-svg-icons",
       "@fortawesome/fontawesome-svg-core",
       "@fortawesome/free-brands-svg-icons",
