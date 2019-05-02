@@ -23,44 +23,27 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-
-interface Data {
-	inputValue: number;
-}
+import VueModel from './VueModel';
 
 @Component({})
-export default class CompoundNumberInput extends Vue {
-	@Prop() public value!: number;
+export default class CompoundNumberInput extends VueModel<number> {
 	@Prop() public min!: number;
 	@Prop() public max!: number;
 
-	public data(): Data {
-		return {
-			inputValue: this.value,
-		};
-	}
-
-	@Watch('inputValue')
-	public inputValueWatcher(value: number): void {
-		this.$emit('input', value);
-	}
-
 	public inc(): void {
-		const data = this.$data as Data;
-		if ((data.inputValue + 10) > this.max) {
+		if ((this.inputValue + 10) > this.max) {
 			return;
 		}
-		data.inputValue += 10;
-		this.$emit('input', data.inputValue);
+		this.inputValue += 10;
+		this.$emit('input', this.inputValue);
 	}
 
 	public dec(): void {
-		const data = this.$data as Data;
-		if ((data.inputValue - 10) < this.min) {
+		if ((this.inputValue - 10) < this.min) {
 			return;
 		}
-		data.inputValue -= 10;
-		this.$emit('input', data.inputValue);
+		this.inputValue -= 10;
+		this.$emit('input', this.inputValue);
 	}
 }
 </script>
