@@ -534,6 +534,14 @@ declare namespace Tone {
 		public unsyncSignal(signal: Signal): this;
 	}
 
+	/**
+	 * Buffer loading and storage. Tone.Buffer is used internally by all classes that make requests for audio files such as Tone.Player, Tone.Sampler and Tone.Convolver. Aside from load callbacks from individual buffers, Tone.Buffer provides events which keep track of the loading progress of all of the buffers. These are Tone.Buffer.on(“load” / “progress” / “error”)
+	 *
+	 * @see https://tonejs.github.io/docs/r13/Buffer
+	 */
+	export class Buffer extends Tone {
+	}
+
 	// ======================
 	// Types
 	// ======================
@@ -798,6 +806,97 @@ declare namespace Tone {
 		 * @param onload The function to invoke when the buffer is loaded. Recommended to use Tone.Buffer.on(‘load’) instead.
 		 */
 		constructor(url: string | AudioBuffer, onload?: Function);
+		/**
+		 * If the file should play as soon as the buffer is loaded.
+		 * @example
+		 * //will play as soon as it's loaded
+		 * var player = new Tone.Player({
+		 *	 "url" : "./path/to/sample.mp3",
+		 *	 "autostart" : true,
+		 * }).toMaster();
+		 */
+		public autostart: boolean;
+		/**
+		 * The audio buffer belonging to the player.
+		 */
+		public buffer: Buffer;
+		/**
+		 * The fadeIn time of the amplitude envelope.
+		 */
+		public fadeIn: Time;
+		/**
+		 * The fadeOut time of the amplitude envelope.
+		 */
+		public fadeOut: Time;
+		/**
+		 * If all the buffer is loaded
+		 */
+		public loaded: boolean;
+		/**
+		 * If the buffer should loop once it’s over.
+		 */
+		public loop: boolean;
+		/**
+		 * If loop is true, the loop will end at this position.
+		 */
+		public loopEnd: Time;
+		/**
+		 * If loop is true, the loop will start at this position.
+		 */
+		public loopStart: Time;
+		/**
+		 * The playback speed. 1 is normal speed. This is not a signal because Safari and iOS currently don’t support playbackRate as a signal.
+		 */
+		public playbackRate: number;
+		/**
+		 * The direction the buffer should play in
+		 */
+		public reverse: boolean;
+
+		/**
+		 * Load the audio file as an audio buffer. Decodes the audio asynchronously and invokes the callback once the audio buffer loads. Note: this does not need to be called if a url was passed in to the constructor. Only use this if you want to manually load a new url.
+		 *
+		 * @param url The url of the buffer to load. Filetype support depends on the browser.
+		 * @param callback The function to invoke once the sample is loaded.
+		 */
+		public load(url: string, callback: Function): Promise<void>;
+		/**
+		 * Stop and then restart the player from the beginning (or offset)
+		 *
+		 * @param startTime When the player should start.
+		 * @param offset The offset from the beginning of the sample to start at.
+		 * @param duration How long the sample should play. If no duration is given, it will default to the full length of the sample (minus any offset)
+		 */
+		public restart(startTime?: Time, offset?: Time, duration?: Time): this;
+		/**
+		 * Seek to a specific time in the player’s buffer. If the source is no longer playing at that time, it will stop. If you seek to a time that
+		 *
+		 * @param offset When the player should start.
+		 * @param time The time for the seek event to occur.
+		 * @example
+		 * source.start(0.2);
+		 * source.stop(0.4);
+		 */
+		public seek(offset: Time, time?: Time): this;
+		/**
+		 * Seek to a specific time in the player’s buffer. If the source is no longer playing at that time, it will stop. If you seek to a time that
+		 *
+		 * @param loopStart The loop end time
+		 * @param loopEnd The loop end time
+		 * @example
+		 * //loop 0.1 seconds of the file.
+		 * player.setLoopPoints(0.2, 0.3);
+		 * player.loop = true;
+		 */
+		public setLoopPoints(loopStart: Time, loopEnd: Time): this;
+		/**
+		 * Play the buffer at the given startTime. Optionally add an offset and/or duration which will play the buffer from a position within the buffer for the given duration.
+		 *
+		 * @param startTime When the player should start.
+		 * @param offset The offset from the beginning of the sample to start at.
+		 * @param duration How long the sample should play. If no duration is given, it will default to the full length of the sample (minus any offset)
+		 */
+		public start(startTime?: Time, offset?: Time, duration?: Time): this;
 	}
 
 	// ======================

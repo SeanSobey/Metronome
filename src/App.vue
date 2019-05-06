@@ -27,7 +27,7 @@
 				<VolumeInput v-on:volume-down="onVolumeDown" v-on:volume-up="onVolumeUp" v-on:volume-on="onVolumeOn" v-on:volume-off="onVolumeOff"></VolumeInput>
 				<hr>
 				<!-- BBPMpm Indicator -->
-				<BpmIndicator></BpmIndicator>
+				<BpmIndicator :currentNote="currentNote"></BpmIndicator>
 				<hr>
 				<!-- BPM -->
 				<BpmInput v-model="bpm" class="my-4"></BpmInput>
@@ -43,13 +43,9 @@ import PlaybackInput from './components/PlaybackInput.vue';
 import VolumeInput from './components/VolumeInput.vue';
 import BpmInput from './components/BpmInput.vue';
 import BpmIndicator from './components/BpmIndicator.vue';
-import BpmRampInput, { BpmRamp } from './components/BpmRampInput.vue';
+import BpmRampInput, { BpmRamp, RampMode } from './components/BpmRampInput.vue';
 import Tone, { TimeObject } from 'tone';
-import $ from 'jquery';
 import Timer from './Timer';
-
-(window as any).$ = $;
-(window as any).jQuery = $;
 
 Vue.filter('time', (value: TimeObject) => `${value.h}:${('0' + value.m).slice(-2)}:${('0' + value.s).slice(-2)}`);
 
@@ -68,16 +64,14 @@ export default class App extends Vue {
 	public bpmRamp: BpmRamp = {
 		from: 100,
 		to: 100,
-		timeEnabled: false,
-		stepsEnabled: false,
+		rampMode: RampMode.Off,
 		interval: 60,
 	};
 	private timer = new Timer();	// TODO: https://tonejs.github.io/docs/#Clock
 	private isPlaying: boolean = false;
 	private currentNote: number = 0;
-	// private pills: JQuery<HTMLElement> = $('#Pills');
-	// private accent: Tone.AudioNode = new Tone.Player('./Sounds/Ping Hi.wav').toMaster();
-	// private beat: Tone.AudioNode = new Tone.Player('./Sounds/Ping Low.wav').toMaster();
+	private accent: Tone.Player = new Tone.Player('./sounds/Ping Hi.wav').toMaster();
+	private beat: Tone.Player = new Tone.Player('./sounds/Ping Low.wav').toMaster();
 
 	public mounted(): void {
 		const synth = new Tone.Synth().toMaster();
@@ -86,14 +80,13 @@ export default class App extends Vue {
 
 	public onPlay(): void {
 		this.currentNote = 0;
-		const isbpmRampEnabled = this.bpmRamp.stepsEnabled || this.bpmRamp.timeEnabled;
-		if (isbpmRampEnabled) {
+		if (this.bpmRamp.rampMode !== RampMode.Off) {
 			this.bpm = this.bpmRamp.from;
 		}
 		// Have to do both for weird reasons :(
 		Tone.Transport.bpm.value = this.bpm;
 		Tone.Transport.bpm.setValueAtTime(this.bpm, '+0');
-		if (this.bpmRamp.timeEnabled) {
+		if (this.bpmRamp.rampMode === RampMode.Secs) {
 			Tone.Transport.bpm.rampTo(this.bpmRamp.to, this.bpmRamp.interval);
 		}
 		// https://tonejs.github.io/docs/#types/Time
@@ -103,6 +96,7 @@ export default class App extends Vue {
 	}
 
 	public onStop(): void {
+		this.currentNote = 0;
 		Tone.Transport.stop();
 		Tone.Transport.cancel();
 		this.timer.stop();
@@ -152,25 +146,12 @@ export default class App extends Vue {
 			? Tone.Transport.timeSignature[0]
 			: Tone.Transport.timeSignature;
 		this.currentNote = (this.currentNote % timeSignature) + 1;
-		// const currentPill = $(this._pills.children()[this.currentNote - 1]);
-
-		// if (this.currentNote === 1) {
-		// 	currentPill.animate({
-		// 		backgroundColor: 'rgb(255,0,0)',
-		// 	}, 50, () => currentPill.animate({
-		// 		backgroundColor: '#636c72',
-		// 	}));
-		// 	this.accent.start(time);
-		// } else {
-		// 	currentPill.animate({
-		// 		backgroundColor: 'rgb(0,255,0)',
-		// 	}, 50, () => currentPill.animate({
-		// 		backgroundColor: '#636c72',
-		// 	}));
-		// 	this.beat.start(time);
-		// }
-
-		if (this.bpmRamp.stepsEnabled && this.currentNote === Tone.Transport.timeSignature) {
+		if (this.currentNote === 1) {
+			this.accent.start(time);
+		} else {
+			this.beat.start(time);
+		}
+		if (this.bpmRamp.rampMode === RampMode.Bars && this.currentNote === Tone.Transport.timeSignature) {
 			const increase = (this.bpmRamp.to - this.bpmRamp.from) / this.bpmRamp.interval;
 			const bpm = Math.round(Math.max(Math.min(Tone.Transport.bpm.value + increase, this.bpmRamp.to), this.bpmRamp.from));
 			Tone.Transport.bpm.setValueAtTime(bpm, time);

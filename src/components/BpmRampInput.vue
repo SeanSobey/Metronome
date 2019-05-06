@@ -6,7 +6,7 @@
 			</b-input-group-text>
 		</b-input-group-prepend>
 		<b-input-group-text class="rounded-0 bg-white flex-fill">
-			<CompoundNumberInput v-model.number="inputValue.from" :disabled="isEnabled()" :min="bpmMin" :max="bpmMax"></CompoundNumberInput>
+			<CompoundNumberInput v-model.number="inputValue.from" :disabled="!isEnabled()" :min="bpmMin" :max="bpmMax"></CompoundNumberInput>
 		</b-input-group-text>
 	<!-- <b-input-group-append>
 			<b-input-group-text>42</b-input-group-text>
@@ -15,16 +15,19 @@
 			<b-input-group-text>To</b-input-group-text>
 		</b-input-group-prepend>
 		<b-input-group-text class="rounded-0 bg-white flex-fill">
-			<CompoundNumberInput v-model.number="inputValue.to" :disabled="isEnabled()" :min="bpmMin" :max="bpmMax"></CompoundNumberInput>
+			<CompoundNumberInput v-model.number="inputValue.to" :disabled="!isEnabled()" :min="bpmMin" :max="bpmMax"></CompoundNumberInput>
 		</b-input-group-text>
 		<b-input-group-append>
 			<b-input-group-text>Over</b-input-group-text>
 			<b-input-group-text>
-				<input type="radio" v-on:click="enableTime()" v-model="inputValue.timeEnabled">
+				<input type="radio" v-model.number="inputValue.rampMode" value="1">
 				Secs
 				&nbsp;
-				<input type="radio" v-on:click="enableSteps()" v-model="inputValue.stepsEnabled">
+				<input type="radio" v-model.number="inputValue.rampMode" value="2">
 				Bars
+				&nbsp;
+				<input type="radio" v-model.number="inputValue.rampMode" value="0">
+				Off
 			</b-input-group-text>
 		</b-input-group-append>
 	</b-input-group>
@@ -42,23 +45,27 @@ const overMin = 0;
 export interface BpmRamp {
 	from: number;
 	to: number;
-	timeEnabled: boolean;
-	stepsEnabled: boolean;
+	rampMode: RampMode;
 	interval: number;
+}
+
+export enum RampMode {
+	Off = 0,
+	Secs = 1,
+	Bars = 2,
 }
 
 @Component({
 	components: {
 		CompoundNumberInput,
 	},
-	methods: {
-		formatBpm: Formatter.bpm,
-	},
 })
 export default class BpmRampInput extends VueModel<BpmRamp> {
 	public readonly bpmMin: number = bpmMin;
 	public readonly bpmMax: number = bpmMax;
 	// public interval: number = 100;
+
+	public formatBpm = Formatter.bpm;
 
 	@Watch('inputValue', { deep: true })
 	public inputValueWatcher(inputValue: BpmRamp): void {
@@ -105,17 +112,7 @@ export default class BpmRampInput extends VueModel<BpmRamp> {
 	// }
 
 	public isEnabled(): boolean {
-		return this.inputValue.timeEnabled || this.inputValue.stepsEnabled;
-	}
-
-	public enableTime(): void {
-		this.inputValue.timeEnabled = true;
-		this.inputValue.stepsEnabled = false;
-	}
-
-	public enableSteps(): void {
-		this.inputValue.stepsEnabled = true;
-		this.inputValue.timeEnabled = false;
+		return this.inputValue.rampMode !== RampMode.Off;
 	}
 }
 </script>
