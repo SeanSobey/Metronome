@@ -33,17 +33,12 @@
 				<BpmInput v-model="bpm" class="my-4"></BpmInput>
 				<BpmRampInput v-model="bpmRamp" class="my-4"></BpmRampInput>
 			</b-jumbotron>
-			<!--
-			<img alt="Vue logo" src="./assets/logo.png">
-			<HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-			-->
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';
-// import HelloWorld from "./components/HelloWorld.vue";
 import PlaybackInput from './components/PlaybackInput.vue';
 import VolumeInput from './components/VolumeInput.vue';
 import BpmInput from './components/BpmInput.vue';
@@ -60,7 +55,6 @@ Vue.filter('time', (value: TimeObject) => `${value.h}:${('0' + value.m).slice(-2
 
 @Component({
 	components: {
-		// HelloWorld,
 		PlaybackInput,
 		VolumeInput,
 		BpmInput,
