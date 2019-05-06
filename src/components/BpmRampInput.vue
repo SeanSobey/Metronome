@@ -6,7 +6,7 @@
 			</b-input-group-text>
 		</b-input-group-prepend>
 		<b-input-group-text class="rounded-0 bg-white flex-fill">
-			<CompoundNumberInput v-model.number="inputValue.from" :min="bpmMin" :max="bpmMax"></CompoundNumberInput>
+			<CompoundNumberInput v-model.number="inputValue.from" :disabled="isEnabled()" :min="bpmMin" :max="bpmMax"></CompoundNumberInput>
 		</b-input-group-text>
 	<!-- <b-input-group-append>
 			<b-input-group-text>42</b-input-group-text>
@@ -15,7 +15,7 @@
 			<b-input-group-text>To</b-input-group-text>
 		</b-input-group-prepend>
 		<b-input-group-text class="rounded-0 bg-white flex-fill">
-			<CompoundNumberInput v-model.number="inputValue.to" :min="bpmMin" :max="bpmMax"></CompoundNumberInput>
+			<CompoundNumberInput v-model.number="inputValue.to" :disabled="isEnabled()" :min="bpmMin" :max="bpmMax"></CompoundNumberInput>
 		</b-input-group-text>
 		<b-input-group-append>
 			<b-input-group-text>Over</b-input-group-text>
@@ -60,10 +60,7 @@ export default class BpmRampInput extends VueModel<BpmRamp> {
 	public readonly bpmMax: number = bpmMax;
 	// public interval: number = 100;
 
-	@Watch('inputValue.from')
-	@Watch('inputValue.to')
-	@Watch('inputValue.timeEnabled')
-	@Watch('inputValue.stepsEnabled')
+	@Watch('inputValue', { deep: true })
 	public inputValueWatcher(inputValue: BpmRamp): void {
 		this.$emit('input', this.inputValue);
 	}
@@ -107,17 +104,21 @@ export default class BpmRampInput extends VueModel<BpmRamp> {
 	// 	this.interval -= 10;
 	// }
 
-	// public enableTime(): void {
-	// 	this.timeEnabled = true;
-	// 	this.stepsEnabled = false;
-	// }
+	public isEnabled(): boolean {
+		return this.inputValue.timeEnabled || this.inputValue.stepsEnabled;
+	}
 
-	// public enableSteps(): void {
-	// 	this.stepsEnabled = true;
-	// 	this.timeEnabled = false;
-	// }
+	public enableTime(): void {
+		this.inputValue.timeEnabled = true;
+		this.inputValue.stepsEnabled = false;
+	}
+
+	public enableSteps(): void {
+		this.inputValue.stepsEnabled = true;
+		this.inputValue.timeEnabled = false;
+	}
 }
 </script>
 
-<style scoped>
+<style scoped lang="less">
 </style>

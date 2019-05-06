@@ -32,6 +32,5 @@ export default class PlaybackInput extends Vue {
 
 </script>
 
-<style scoped>
-
+<style scoped lang="less">
 </style>

@@ -51,6 +51,5 @@ export default class VolumeInput extends Vue {
 }
 </script>
 
-<style scoped>
-
+<style scoped lang="less">
 </style>

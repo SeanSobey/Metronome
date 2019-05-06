@@ -16,6 +16,5 @@ export default class BpmIndicator extends Vue {
 }
 </script>
 
-<style scoped>
-
+<style scoped lang="less">
 </style>

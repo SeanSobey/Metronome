@@ -143,12 +143,8 @@ export default class App extends Vue {
 		Tone.Transport.bpm.value = this.bpm;
 	}
 
-	@Watch('bpmRamp.from')
-	@Watch('bpmRamp.to')
-	@Watch('bpmRamp.timeEnabled')
-	@Watch('bpmRamp.stepsEnabled')
+	@Watch('bpmRamp', { deep: true })
 	public bpmRampWatcher(): void {
-		console.log('bpmRamp', this.bpmRamp);
 	}
 
 	private _loop(time: number): void {
@@ -180,18 +176,9 @@ export default class App extends Vue {
 			Tone.Transport.bpm.setValueAtTime(bpm, time);
 		}
 		this.bpm = Math.round(Tone.Transport.bpm.value);
-		// bpmSlider.bootstrapSlider('setValue', app.bpm);
 	}
 }
 </script>
 
-<style lang="less">
-// #app {
-//   font-family: 'Avenir', Helvetica, Arial, sans-serif;
-//   -webkit-font-smoothing: antialiased;
-//   -moz-osx-font-smoothing: grayscale;
-//   text-align: center;
-//   color: #2c3e50;
-//   margin-top: 60px;
-// }
+<style scoped lang="less">
 </style>

@@ -34,16 +34,14 @@ import VueModel from './VueModel';
 
 const tapTimeout = 1000 * 4;
 
-@Component({
-	methods: {
-		formatBpm: Formatter.bpm,
-	},
-})
+@Component({})
 export default class BpmInput extends VueModel<number> {
 	public readonly bpmMin: number = bpmMin;
 	public readonly bpmMax: number = bpmMax;
 	public bpmValue: number = this.value;
 	public taps: Array<number> = [];
+
+	public formatBpm = Formatter.bpm;
 
 	public incBpm(): void {
 		if (this.inputValue >= this.bpmMax) {
@@ -87,3 +85,6 @@ export default class BpmInput extends VueModel<number> {
 	}
 }
 </script>
+
+<style scoped lang="less">
+</style>
