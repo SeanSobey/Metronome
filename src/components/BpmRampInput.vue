@@ -8,34 +8,29 @@
 		<b-input-group-text class="rounded-0 bg-white flex-fill">
 			<CompoundNumberInput v-model.number="inputValue.from" :disabled="!isEnabled()" :min="bpmMin" :max="bpmMax"></CompoundNumberInput>
 		</b-input-group-text>
-	<!-- <b-input-group-append>
-			<b-input-group-text>42</b-input-group-text>
-		</b-input-group-append> -->
-		<b-input-group-prepend style="margin: 0 -1px;">
+		<b-input-group-prepend class="bpm-ramp-input-inline-prepend">
 			<b-input-group-text>To</b-input-group-text>
 		</b-input-group-prepend>
 		<b-input-group-text class="rounded-0 bg-white flex-fill">
 			<CompoundNumberInput v-model.number="inputValue.to" :disabled="!isEnabled()" :min="bpmMin" :max="bpmMax"></CompoundNumberInput>
 		</b-input-group-text>
-		<b-input-group-append>
+		<b-input-group-prepend class="bpm-ramp-input-inline-prepend">
 			<b-input-group-text>Over</b-input-group-text>
-			<b-input-group-text>
-				<input type="radio" v-model.number="inputValue.rampMode" value="1">
-				Secs
-				&nbsp;
-				<input type="radio" v-model.number="inputValue.rampMode" value="2">
-				Bars
-				&nbsp;
-				<input type="radio" v-model.number="inputValue.rampMode" value="0">
-				Off
-			</b-input-group-text>
+		</b-input-group-prepend>
+		<b-input-group-text class="rounded-0 bg-white flex-fill">
+			<CompoundNumberInput v-model.number="inputValue.interval" :min="bpmIntervalMin" :max="bpmIntervalMax"></CompoundNumberInput>
+		</b-input-group-text>
+		<b-input-group-append>
+			<b-button-group size="sm">
+				<b-button v-for="(btn, index) in buttons" :key="index" :pressed.sync="btn.pressed" v-on:click="onButtonClick(index)" variant="primary">{{ btn.caption }}</b-button>
+			</b-button-group>
 		</b-input-group-append>
 	</b-input-group>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { bpmMin, bpmMax } from './BpmConstants';
+import { bpmMin, bpmMax, bpmIntervalMin, bpmIntervalMax } from './BpmConstants';
 import Formatter from '../Formatter';
 import VueModel from './VueModel';
 import CompoundNumberInput from './CompoundNumberInput.vue';
@@ -52,8 +47,10 @@ export interface BpmRamp {
 export enum RampMode {
 	Off = 0,
 	Secs = 1,
-	Bars = 2,
+	Beats = 2,
 }
+
+type ButtonCaption = 'Off' | 'Secs' | 'Beats';
 
 @Component({
 	components: {
@@ -63,7 +60,14 @@ export enum RampMode {
 export default class BpmRampInput extends VueModel<BpmRamp> {
 	public readonly bpmMin: number = bpmMin;
 	public readonly bpmMax: number = bpmMax;
-	// public interval: number = 100;
+	public readonly bpmIntervalMin: number = bpmIntervalMin;
+	public readonly bpmIntervalMax: number = bpmIntervalMax;
+	public interval: number = 100;
+	public buttons: Array<{ caption: ButtonCaption, pressed: boolean}> = [
+		{ caption: 'Off', pressed: true },
+		{ caption: 'Secs', pressed: false },
+		{ caption: 'Beats', pressed: false },
+	];
 
 	public formatBpm = Formatter.bpm;
 
@@ -100,6 +104,23 @@ export default class BpmRampInput extends VueModel<BpmRamp> {
 		this.inputValue.to--;
 	}
 
+	public onButtonClick(index: number): void {
+		for (const [buttonIndex, button] of this.buttons.entries()) {
+			if (buttonIndex !== index) {
+				button.pressed = false;
+			}
+			if (button.caption === 'Off' && button.pressed) {
+				this.inputValue.rampMode = RampMode.Off;
+			}
+			if (button.caption === 'Secs' && button.pressed) {
+				this.inputValue.rampMode = RampMode.Secs;
+			}
+			if (button.caption === 'Beats' && button.pressed) {
+				this.inputValue.rampMode = RampMode.Beats;
+			}
+		}
+	}
+
 	// public incOver(): void {
 	// 	this.interval += 10;
 	// }
@@ -118,4 +139,7 @@ export default class BpmRampInput extends VueModel<BpmRamp> {
 </script>
 
 <style scoped lang="less">
+.bpm-ramp-input-inline-prepend {
+	margin: 0 -1px;
+}
 </style>
