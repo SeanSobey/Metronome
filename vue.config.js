@@ -1,3 +1,5 @@
 module.exports = {
-	publicPath: 'Metronome',
+	publicPath: process.env.NODE_ENV === 'production'
+		? '/Metronome/'
+		: '/',
 };

@@ -5,6 +5,7 @@
   "scripts": {
     "serve": "vue-cli-service serve --watch",
     "build": "vue-cli-service build",
+    "deploy": "cpx dist/** docs",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit"
   },
@@ -33,6 +34,7 @@
     "@vue/test-utils": "1.0.0-beta.29",
     "babel-eslint": "^10.0.1",
     "chai": "^4.1.2",
+    "cpx": "^1.5.0",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
     "less": "^3.0.4",
