@@ -73,13 +73,8 @@ export default class App extends Vue {
 	private accent: Tone.Player = new Tone.Player('./sounds/Ping Hi.wav').toMaster();
 	private beat: Tone.Player = new Tone.Player('./sounds/Ping Low.wav').toMaster();
 
-	public mounted(): void {
-		const synth = new Tone.Synth().toMaster();
-		// synth.triggerAttackRelease("C4", "8n");
-	}
-
 	public onPlay(): void {
-		this.currentNote = 0;
+		this.stopAndReset();
 		if (this.bpmRamp.rampMode !== RampMode.Off) {
 			this.bpm = this.bpmRamp.from;
 		}
@@ -96,17 +91,7 @@ export default class App extends Vue {
 	}
 
 	public onStop(): void {
-		this.currentNote = 0;
-		Tone.Transport.stop();
-		Tone.Transport.cancel();
-		this.timer.stop();
-		this.time = {
-			h: 0,
-			m: 0,
-			s: 0,
-			ms: 0,
-		};
-		// this.isPlaying = false;
+		this.stopAndReset();
 	}
 
 	public onPause(): void {
@@ -141,17 +126,26 @@ export default class App extends Vue {
 	public bpmRampWatcher(): void {
 	}
 
+	private stopAndReset(): void {
+		this.currentNote = 0;
+		Tone.Transport.stop();
+		Tone.Transport.cancel();
+		this.timer.stop();
+		this.time = { h: 0, m: 0, s: 0, ms: 0 };
+		// this.isPlaying = false;
+	}
+
 	private _loop(time: number): void {
-		const timeSignature = Array.isArray(Tone.Transport.timeSignature)
+		const timeSignatureSubvisions = Array.isArray(Tone.Transport.timeSignature)
 			? Tone.Transport.timeSignature[0]
 			: Tone.Transport.timeSignature;
-		this.currentNote = (this.currentNote % timeSignature) + 1;
+		this.currentNote = (this.currentNote % timeSignatureSubvisions) + 1;
 		if (this.currentNote === 1) {
 			this.accent.start(time);
 		} else {
 			this.beat.start(time);
 		}
-		if (this.bpmRamp.rampMode === RampMode.Bars && this.currentNote === Tone.Transport.timeSignature) {
+		if (this.bpmRamp.rampMode === RampMode.Beats && this.currentNote === timeSignatureSubvisions) {
 			const increase = (this.bpmRamp.to - this.bpmRamp.from) / this.bpmRamp.interval;
 			const bpm = Math.round(Math.max(Math.min(Tone.Transport.bpm.value + increase, this.bpmRamp.to), this.bpmRamp.from));
 			Tone.Transport.bpm.setValueAtTime(bpm, time);

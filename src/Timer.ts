@@ -12,7 +12,7 @@ export default class Timer {
 	}
 
 	public start(callback: TimerStartCallback): void {
-		if (!this._startTime) {
+		if (this._startTime === null) {
 			this._startTime = new Date().getTime();
 		}
 		this._timer = setInterval(() => {
