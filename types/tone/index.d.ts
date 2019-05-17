@@ -389,7 +389,7 @@ declare namespace Tone {
 		/**
 		 * Returns the playback state of the source, either “started”, “stopped”, or “paused”
 		 */
-		public state: string;
+		public state: "started" | "stopped" | "paused";
 		/**
 		 * The swing value. Between 0-1 where 1 equal to the note + half the subdivision.
 		 */
@@ -793,6 +793,65 @@ declare namespace Tone {
 	 * @see https://tonejs.github.io/docs/r13/AudioNode
 	 */
 	export class Source extends AudioNode {
+		/**
+		 * The fadeIn time of the amplitude envelope.
+		 */
+		public fadeIn: Time;
+		/**
+		 * The fadeOut time of the amplitude envelope.
+		 */
+		public fadeOut: Time;
+		/**
+		 * Mute the output.
+		 * @example
+		 * //mute the output
+		 * source.mute = true;
+		 */
+		public mute: boolean;
+		/**
+		 * Returns the playback state of the source, either “started” or “stopped”.
+		 */
+		public readonly state: "started" | "stopped";
+		/**
+		 * The volume of the output in decibels.
+		 */
+		public readonly volume: Decibels;
+
+		/**
+		 * Start the source at the specified time. If no time is given, start the source now.
+		 *
+		 * @param time When the source should be started.
+		 * @example
+		 * source.start("+0.5"); //starts the source 0.5 seconds from now
+		 */
+		public start(time?: Time): this;
+		/**
+		 * Stop the source at the specified time. If no time is given, stop the source now.
+		 *
+		 * @param time When the source should be stopped.
+		 * @example
+		 * source.stop(); // stops the source immediately
+		 */
+		public stop(time?: Time): this;
+		/**
+		 * Sync the source to the Transport so that all subsequent calls to start and stop are synced to the TransportTime instead of the AudioContext time.
+		 *
+		 * @example
+		 * //sync the source so that it plays between 0 and 0.3 on the Transport's timeline
+		 * source.sync().start(0).stop(0.3);
+		 * //start the transport.
+		 * Tone.Transport.start();
+		 * //start the transport with an offset and the sync'ed sources
+		 * //will start in the correct position
+		 * source.sync().start(0.1);
+		 * //the source will be invoked with an offset of 0.4
+		 * Tone.Transport.start("+0.5", 0.5);
+		 */
+		public sync(): this;
+		/**
+		 * Unsync the source to the Transport. See Tone.Source.sync
+		 */
+		public unsync(): this;
 	}
 
 	/**
