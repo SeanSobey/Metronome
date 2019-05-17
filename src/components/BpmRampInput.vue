@@ -30,7 +30,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { bpmMin, bpmMax, bpmIntervalMin, bpmIntervalMax } from './BpmConstants';
+import { bpmMin, bpmMax, bpmIntervalMin, bpmIntervalMax } from '../BpmConstants';
 import Formatter from '../Formatter';
 import VueModel from './VueModel';
 import CompoundNumberInput from './CompoundNumberInput.vue';

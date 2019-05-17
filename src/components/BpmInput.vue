@@ -28,7 +28,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { bpmMin, bpmMax } from './BpmConstants';
+import { bpmMin, bpmMax } from '../BpmConstants';
 import Formatter from '../Formatter';
 import VueModel from './VueModel';
 
