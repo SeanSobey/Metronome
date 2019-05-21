@@ -13,6 +13,7 @@ import { Prop, Vue, Watch } from 'vue-property-decorator';
 
 export default class VueModel<T> extends Vue {
 	@Prop() public readonly value!: T;
+	// tslint:disable-next-line: readonly-keyword
 	public inputValue: T = this.value;
 
 	@Watch('inputValue')

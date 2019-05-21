@@ -1,8 +1,10 @@
+
 <template>
 	<div id="app">
 		<div class="container">
 			<!-- https://getbootstrap.com/docs/4.0/components/navbar/ -->
 			<!-- https://bootstrap-vue.js.org/docs/components/navbar/ -->
+			<!-- Header -->
 			<b-navbar type="dark" variant="primary">
 				<b-navbar-brand>
 					<img src="./assets/icon.png" width="32" height="32" class="d-inline-block align-top">
@@ -14,38 +16,67 @@
 					</b-dropdown-item>
 				</b-navbar-nav>
 			</b-navbar>
-
 			<b-jumbotron text-variant="center" class="my-2">
 				<!-- Time -->
-				<h2>
-					<font-awesome-icon icon="clock" class="mr-3"/>
-					<label>{{time | time()}}</label>
-				</h2>
-				<!-- Playback Controls -->
-				<PlaybackInput v-on:play="onPlay" v-on:stop="onStop" v-on:pause="onPause"></PlaybackInput>
-				<!-- Volume Controls -->
-				<VolumeInput v-on:volume-down="onVolumeDown" v-on:volume-up="onVolumeUp" v-on:volume-on="onVolumeOn" v-on:volume-off="onVolumeOff"></VolumeInput>
+				<div class="border border-secondary rounded p-1 d-inline-flex flex-column">
+					<div class="h2 m-1">
+						<font-awesome-icon icon="clock" class="mr-3"/>
+						<label>{{ timeManager.time | time() }}</label>
+					</div>
+					<div class="h3 m-1">
+						<font-awesome-icon icon="spinner" class="mr-1"/>
+						{{ currentBpm() }}
+					</div>
+				</div>
+				<!-- Playback & Volume Controls -->
+				<div>
+					<PlaybackInput v-on:play="onPlay" v-on:stop="onStop" v-on:pause="onPause"></PlaybackInput>
+					<VolumeInput v-on:volume-down="onVolumeDown" v-on:volume-up="onVolumeUp" v-on:volume-on="onVolumeOn" v-on:volume-off="onVolumeOff"></VolumeInput>
+				</div>
 				<hr>
-				<!-- BBPMpm Indicator -->
-				<BpmIndicator :currentNote="currentNote"></BpmIndicator>
+				<!-- BPMpm Indicator -->
+				<BpmIndicator :beatsPerBar="bpmIndicatorManager.beatsPerBar" :currentBeat="bpmIndicatorManager.currentBeat"></BpmIndicator>
 				<hr>
+				<!-- Time Signature -->
+				<TimeSignatureInput v-model="beatsPerBar" :disabled="isPlaying()"></TimeSignatureInput>
 				<!-- BPM -->
-				<BpmInput v-model="bpm" class="my-4"></BpmInput>
-				<BpmRampInput v-model="bpmRamp" class="my-4"></BpmRampInput>
+				<BpmInput v-model="bpm" :disabled="!isBpmInputEnabled()" class="my-4"></BpmInput>
+				<BpmRampInput v-model="bpmRamp" :disabled="isPlaying()" class="my-4"></BpmRampInput>
 			</b-jumbotron>
+			<h2 class="text-center my-4">How to use the metronome</h2>
+			<p class="text-center my-4">
+				The metronome has an ajustable tempo that stretches from {{ bpmMin }} to {{ bpmMax }} BPM. You can use the metronome by adjusting the
+				<b>
+					<font-awesome-icon icon="spinner" class="mr-1"/>BPM
+				</b> slider.
+			</p>
+			<p class="text-center my-4">
+				You can configure the BPM over time by adjusting the
+				<b>
+					<font-awesome-icon icon="signal" class="mr-1"/>BPM Ramp
+				</b> sliders. Specifying the start BPM, target BPM and the time the increase/decrease takes. This can happen in either a smooth increase in
+				<b>seconds</b> or
+				<b>beats</b>.
+			</p>
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
+import Tone, { TimeObject } from 'tone';
 import { Component, Vue, Watch } from 'vue-property-decorator';
+
 import PlaybackInput from './components/PlaybackInput.vue';
 import VolumeInput from './components/VolumeInput.vue';
 import BpmInput from './components/BpmInput.vue';
 import BpmIndicator from './components/BpmIndicator.vue';
 import BpmRampInput, { BpmRamp, RampMode } from './components/BpmRampInput.vue';
-import Tone, { TimeObject } from 'tone';
-import Timer from './Timer';
+import TimeSignatureInput from './components/TimeSignatureInput.vue';
+import TimeManager from './TimeManager';
+import { bpmMin, bpmMax, bpmIntervalMin, bpmIntervalMax } from './BpmConstants';
+import { IRuntimeManager } from './IRuntimeManager';
+import BpmIndicatorManager from './BpmIndicatorManager';
+import { range } from './Utils';
 
 Vue.filter('time', (value: TimeObject) => `${value.h}:${('0' + value.m).slice(-2)}:${('0' + value.s).slice(-2)}`);
 
@@ -56,10 +87,12 @@ Vue.filter('time', (value: TimeObject) => `${value.h}:${('0' + value.m).slice(-2
 		BpmInput,
 		BpmRampInput,
 		BpmIndicator,
+		TimeSignatureInput,
 	},
 })
 export default class App extends Vue {
-	public time: TimeObject = { h: 0, m: 0, s: 0, ms: 0 };
+	public bpmMin = bpmMin;
+	public bpmMax = bpmMax;
 	public bpm: number = 100;
 	public bpmRamp: BpmRamp = {
 		from: 100,
@@ -67,36 +100,85 @@ export default class App extends Vue {
 		rampMode: RampMode.Off,
 		interval: 60,
 	};
-	private timer = new Timer();	// TODO: https://tonejs.github.io/docs/#Clock
-	private isPlaying: boolean = false;
-	private currentNote: number = 0;
+	private beatsPerBar: number = 4;
+	private timeManager = new TimeManager();	// TODO: https://tonejs.github.io/docs/#Clock
+	private isStopped: boolean = true;
+	private isPaused: boolean = false;
 	private accent: Tone.Player = new Tone.Player('./sounds/Ping Hi.wav').toMaster();
 	private beat: Tone.Player = new Tone.Player('./sounds/Ping Low.wav').toMaster();
+	private bpmIndicatorManager = new BpmIndicatorManager(this.beatsPerBar);
+
+	constructor() {
+		super();
+		Tone.Transport.bpm.value = this.bpm;
+	}
+
+	@Watch('bpm')
+	public bpmWatcher(): void {
+		Tone.Transport.bpm.value = this.bpm;
+	}
+
+	@Watch('bpmRamp', { deep: true })
+	public bpmRampWatcher(): void {
+	}
+
+	@Watch('beatsPerBar')
+	public beatsPerBarWatcher(): void {
+		this.bpmIndicatorManager = new BpmIndicatorManager(this.beatsPerBar);
+		Tone.Transport.timeSignature = this.beatsPerBar;
+	}
+
+	public currentBpm(): string {
+		return Tone.Transport.bpm.value.toFixed(0);
+	}
+
+	public isBpmInputEnabled(): boolean {
+		return this.bpmRamp.rampMode === RampMode.Off;
+	}
+
+	public isPlaying(): boolean {
+		if (this.isStopped) {
+			return false;
+		}
+		if (this.isPaused) {
+			return false;
+		}
+		return true;
+	}
 
 	public onPlay(): void {
-		this.stopAndReset();
-		if (this.bpmRamp.rampMode !== RampMode.Off) {
-			this.bpm = this.bpmRamp.from;
+		if (this.isPlaying()) {
+			return;
 		}
-		// Have to do both for weird reasons :(
 		Tone.Transport.bpm.value = this.bpm;
-		Tone.Transport.bpm.setValueAtTime(this.bpm, '+0');
-		if (this.bpmRamp.rampMode === RampMode.Secs) {
-			Tone.Transport.bpm.rampTo(this.bpmRamp.to, this.bpmRamp.interval);
+		if (this.isStopped) {
+			this.setupBpmMode();
+			const sequence = this.createNoteSequence();
+			sequence.start(0);
 		}
-		// https://tonejs.github.io/docs/#types/Time
-		Tone.Transport.scheduleRepeat(this._loop.bind(this), '4n');
+		if (this.isPaused) {
+		}
+		this.isStopped = false;
+		this.isPaused = false;
 		Tone.Transport.start();
-		this.timer.start((h, m, s, ms) => (this.time = { h, m, s, ms }));
+		this.timeManager.start();
+		this.bpmIndicatorManager.start();
 	}
 
 	public onStop(): void {
-		this.stopAndReset();
+		Tone.Transport.stop();
+		Tone.Transport.cancel(0);
+		Tone.Transport.seconds = 0;
+		this.timeManager.stop();
+		this.bpmIndicatorManager.stop();
+		this.isStopped = true;
 	}
 
 	public onPause(): void {
-		Tone.Transport.pause();
-		this.timer.pause();
+		(Tone.Transport.pause as any)();
+		this.timeManager.pause();
+		this.bpmIndicatorManager.pause();
+		this.isPaused = true;
 	}
 
 	public onVolumeDown(volume: number): void {
@@ -117,41 +199,67 @@ export default class App extends Vue {
 		Tone.Master.mute = true;
 	}
 
-	@Watch('bpm')
-	public bpmWatcher(): void {
-		Tone.Transport.bpm.value = this.bpm;
+	private createNoteSequence(): Tone.Sequence {
+		const accentNote = 'G2';
+		const beatNote = 'C2';
+		const notes: Tone.SequenceArray = [accentNote, ...new Array(this.beatsPerBar - 1).fill(beatNote)];
+		return new Tone.Sequence((time, note) => {
+			/* eslint-disable indent */
+			switch (note) {
+				case accentNote:
+					this.accent.start(time);
+					break;
+				case beatNote:
+					this.beat.start(time);
+					break;
+				default:
+					break;
+			}
+			/* eslint-enable indent */
+		}, notes, '4n');
 	}
 
-	@Watch('bpmRamp', { deep: true })
-	public bpmRampWatcher(): void {
-	}
-
-	private stopAndReset(): void {
-		this.currentNote = 0;
-		Tone.Transport.stop();
-		Tone.Transport.cancel();
-		this.timer.stop();
-		this.time = { h: 0, m: 0, s: 0, ms: 0 };
-		// this.isPlaying = false;
-	}
-
-	private _loop(time: number): void {
-		const timeSignatureSubvisions = Array.isArray(Tone.Transport.timeSignature)
-			? Tone.Transport.timeSignature[0]
-			: Tone.Transport.timeSignature;
-		this.currentNote = (this.currentNote % timeSignatureSubvisions) + 1;
-		if (this.currentNote === 1) {
-			this.accent.start(time);
-		} else {
-			this.beat.start(time);
+	private setupBpmMode(): void {
+		/* eslint-disable indent */
+		switch (this.bpmRamp.rampMode) {
+			case RampMode.Secs:
+				Tone.Transport.bpm.rampTo(this.bpmRamp.to, this.bpmRamp.interval);
+				break;
+			case RampMode.Bars:
+				const loop = new Tone.Loop((time) => {
+					if (this.bpmIndicatorManager.currentBeat === this.beatsPerBar) {
+						const increase = (this.bpmRamp.to - this.bpmRamp.from) / this.bpmRamp.interval;
+						const bpm = Math.round(Math.max(Math.min(Tone.Transport.bpm.value + increase, this.bpmRamp.to), this.bpmRamp.from));
+						Tone.Transport.bpm.setValueAtTime(bpm, time);
+					}
+				}, '4n');
+				loop.start(0);
+				break;
+			case RampMode.Off:
+				break;
+			default:
+				throw new Error(`Un-handled ramp mode: ${this.bpmRamp.rampMode}`);
 		}
-		if (this.bpmRamp.rampMode === RampMode.Beats && this.currentNote === timeSignatureSubvisions) {
-			const increase = (this.bpmRamp.to - this.bpmRamp.from) / this.bpmRamp.interval;
-			const bpm = Math.round(Math.max(Math.min(Tone.Transport.bpm.value + increase, this.bpmRamp.to), this.bpmRamp.from));
-			Tone.Transport.bpm.setValueAtTime(bpm, time);
-		}
-		this.bpm = Math.round(Tone.Transport.bpm.value);
+		/* eslint-enable indent */
 	}
+
+	// private _loop(time: number): void {
+	// 	const timeSignatureSubvisions = Array.isArray(Tone.Transport.timeSignature)
+	// 		? Tone.Transport.timeSignature[0]
+	// 		: Tone.Transport.timeSignature;
+	// 	this.currentNote = (this.currentNote % timeSignatureSubvisions) + 1;
+	// 	if (this.currentNote === 1) {
+	// 		this.accent.start(time);
+	// 	} else {
+	// 		this.beat.start(time);
+	// 	}
+	// 	if (this.bpmRamp.rampMode === RampMode.Beats && this.currentNote === timeSignatureSubvisions) {
+	// 		const increase = (this.bpmRamp.to - this.bpmRamp.from) / this.bpmRamp.interval;
+	// 		const bpm = Math.round(Math.max(Math.min(Tone.Transport.bpm.value + increase, this.bpmRamp.to), this.bpmRamp.from));
+	// 		Tone.Transport.bpm.setValueAtTime(bpm, time);
+	// 	}
+	// 	this.bpm = Math.round(Tone.Transport.bpm.value);
+	// }
 }
 </script>
 

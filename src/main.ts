@@ -9,7 +9,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import {
 	faClock, faPlay, faStop, faPause, faVolumeOff, faVolumeDown, faVolumeUp, faSpinner, faPlus, faMinus, faSignal, faArrowUp, faArrowDown
 } from '@fortawesome/free-solid-svg-icons';
-import { faGithub } from '@fortawesome/free-brands-svg-icons';
+import { faGithub, faItunesNote } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon, FontAwesomeLayers, FontAwesomeLayersText } from '@fortawesome/vue-fontawesome';
 
 Vue.config.productionTip = false;
@@ -18,7 +18,8 @@ Vue.use(BootstrapVue);
 
 // https://github.com/FortAwesome/vue-fontawesome
 // https://fontawesome.com/icons?d=gallery
-library.add(faClock, faPlay, faStop, faPause, faVolumeOff, faVolumeDown, faVolumeUp, faSpinner, faGithub, faPlus, faMinus, faSignal, faArrowUp, faArrowDown);
+library.add(faClock, faPlay, faStop, faPause, faVolumeOff, faVolumeDown, faVolumeUp, faSpinner, faPlus, faMinus, faSignal, faArrowUp, faArrowDown);
+library.add(faGithub, faItunesNote);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 Vue.component('font-awesome-layers', FontAwesomeLayers);
 Vue.component('font-awesome-layers-text', FontAwesomeLayersText);

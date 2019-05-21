@@ -1,6 +1,11 @@
 <template>
-	<div id="Pills">
-		<b-badge pill v-for="index in 4" :key="index" :variant="getVariant(index)" class="mx-2 bpm-indicator">{{index}}</b-badge>
+	<div class="h4 border border-secondary rounded d-inline-flex m-0 p-2">
+		<b-badge pill
+			v-for="beatIndex in beatsPerBar"
+			:key="beatIndex"
+			:variant="getPillVariant(beatIndex)"
+			class="mx-2 bpm-indicator">{{ beatIndex }}
+		</b-badge>
 	</div>
 </template>
 
@@ -9,11 +14,15 @@ import { Component, Vue, Watch, Prop } from 'vue-property-decorator';
 
 @Component({})
 export default class BpmIndicator extends Vue {
-	@Prop({ required: false, default: 0 }) public currentNote!: number;
+	@Prop({ required: true }) public beatsPerBar!: number;
+	@Prop({ required: true }) public currentBeat!: number;
 
-	public getVariant(index: number): string {
-		if (this.currentNote === index) {
+	public getPillVariant(beatIndex: number): string {
+		if (beatIndex === this.currentBeat) {
 			return 'dark';
+		}
+		if (beatIndex === 1) {
+			return 'light';
 		}
 		return 'primary';
 	}

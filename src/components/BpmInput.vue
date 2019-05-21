@@ -5,13 +5,32 @@
 				<font-awesome-icon icon="spinner" class="mr-1"/>BPM
 			</b-input-group-text>
 		</b-input-group-prepend>
-		<b-form-input type="range" size="lg" v-model.number="inputValue" :min="bpmMin" :max="bpmMax"></b-form-input>
+		<b-form-input
+			type="range"
+			size="lg"
+			v-model.number="inputValue"
+			:disabled="disabled"
+			:min="bpmMin"
+			:max="bpmMax"
+		></b-form-input>
 		<b-input-group-append>
 			<b-button-group>
-				<b-button variant="primary" v-b-tooltip.hover title="BPM--" v-on:click="decBpm()">
+				<b-button
+					variant="primary"
+					v-b-tooltip.hover
+					title="BPM--"
+					:disabled="disabled"
+					v-on:click="decBpm()"
+				>
 					<font-awesome-icon icon="minus"/>
 				</b-button>
-				<b-button variant="primary" v-b-tooltip.hover title="BPM++" v-on:click="incBpm()">
+				<b-button
+					variant="primary"
+					v-b-tooltip.hover
+					title="BPM++"
+					:disabled="disabled"
+					v-on:click="incBpm()"
+				>
 					<font-awesome-icon icon="plus"/>
 				</b-button>
 			</b-button-group>
@@ -19,6 +38,7 @@
 				variant="outline-primary"
 				v-b-tooltip.hover
 				title="BPM Tap"
+				:disabled="disabled"
 				v-on:click="tapBpm($event);"
 			>Tap</b-button>
 			<b-input-group-text>{{ formatBpm(inputValue) }}</b-input-group-text>
@@ -36,6 +56,7 @@ const tapTimeout = 1000 * 4;
 
 @Component({})
 export default class BpmInput extends VueModel<number> {
+	@Prop({ required: false, default: false }) public disabled!: boolean;
 	public readonly bpmMin: number = bpmMin;
 	public readonly bpmMax: number = bpmMax;
 	public bpmValue: number = this.value;
