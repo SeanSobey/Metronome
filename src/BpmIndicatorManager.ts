@@ -1,16 +1,16 @@
 import { IRuntimeManager } from './IRuntimeManager';
-import Tone from 'tone';
+import { Loop } from 'tone';
 
 export default class BpmIndicatorManager implements IRuntimeManager {
 	public currentBeat: number;
 	public beatsPerBar: number;
 
-	private loop: Tone.Loop;
+	private loop: Loop;
 
 	constructor(beatsPerBar: number) {
 		this.currentBeat = 0;
 		this.beatsPerBar = beatsPerBar;
-		this.loop = new Tone.Loop(() => {
+		this.loop = new Loop(() => {
 			this.currentBeat = (this.currentBeat % beatsPerBar) + 1;
 		}, `4n`);
 	}

@@ -63,7 +63,7 @@
 </template>
 
 <script lang="ts">
-import Tone, { TimeObject } from 'tone';
+import { Transport, Master, TimeObject, Player, Sequence, SequenceArray, Loop } from 'tone';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 
 import PlaybackInput from './components/PlaybackInput.vue';
@@ -104,18 +104,18 @@ export default class App extends Vue {
 	private timeManager = new TimeManager();	// TODO: https://tonejs.github.io/docs/#Clock
 	private isStopped: boolean = true;
 	private isPaused: boolean = false;
-	private accent: Tone.Player = new Tone.Player('./sounds/Ping Hi.wav').toMaster();
-	private beat: Tone.Player = new Tone.Player('./sounds/Ping Low.wav').toMaster();
+	private accent: Player = new Player('./sounds/Ping Hi.wav').toMaster();
+	private beat: Player = new Player('./sounds/Ping Low.wav').toMaster();
 	private bpmIndicatorManager = new BpmIndicatorManager(this.beatsPerBar);
 
 	constructor() {
 		super();
-		Tone.Transport.bpm.value = this.bpm;
+		Transport.bpm.value = this.bpm;
 	}
 
 	@Watch('bpm')
 	public bpmWatcher(): void {
-		Tone.Transport.bpm.value = this.bpm;
+		Transport.bpm.value = this.bpm;
 	}
 
 	@Watch('bpmRamp', { deep: true })
@@ -125,11 +125,11 @@ export default class App extends Vue {
 	@Watch('beatsPerBar')
 	public beatsPerBarWatcher(): void {
 		this.bpmIndicatorManager = new BpmIndicatorManager(this.beatsPerBar);
-		Tone.Transport.timeSignature = this.beatsPerBar;
+		Transport.timeSignature = this.beatsPerBar;
 	}
 
 	public currentBpm(): string {
-		return Tone.Transport.bpm.value.toFixed(0);
+		return Transport.bpm.value.toFixed(0);
 	}
 
 	public isBpmInputEnabled(): boolean {
@@ -150,7 +150,7 @@ export default class App extends Vue {
 		if (this.isPlaying()) {
 			return;
 		}
-		Tone.Transport.bpm.value = this.bpm;
+		Transport.bpm.value = this.bpm;
 		if (this.isStopped) {
 			this.setupBpmMode();
 			const sequence = this.createNoteSequence();
@@ -160,50 +160,50 @@ export default class App extends Vue {
 		}
 		this.isStopped = false;
 		this.isPaused = false;
-		Tone.Transport.start();
+		Transport.start();
 		this.timeManager.start();
 		this.bpmIndicatorManager.start();
 	}
 
 	public onStop(): void {
-		Tone.Transport.stop();
-		Tone.Transport.cancel(0);
-		Tone.Transport.seconds = 0;
+		Transport.stop();
+		Transport.cancel(0);
+		Transport.seconds = 0;
 		this.timeManager.stop();
 		this.bpmIndicatorManager.stop();
 		this.isStopped = true;
 	}
 
 	public onPause(): void {
-		(Tone.Transport.pause as any)();
+		(Transport.pause as any)();
 		this.timeManager.pause();
 		this.bpmIndicatorManager.pause();
 		this.isPaused = true;
 	}
 
 	public onVolumeDown(volume: number): void {
-		Tone.Master.mute = false;
-		Tone.Master.volume.value = volume;
+		Master.mute = false;
+		Master.volume.value = volume;
 	}
 
 	public onVolumeUp(volume: number): void {
-		Tone.Master.mute = false;
-		Tone.Master.volume.value = volume;
+		Master.mute = false;
+		Master.volume.value = volume;
 	}
 
 	public onVolumeOn(): void {
-		Tone.Master.mute = false;
+		Master.mute = false;
 	}
 
 	public onVolumeOff(): void {
-		Tone.Master.mute = true;
+		Master.mute = true;
 	}
 
-	private createNoteSequence(): Tone.Sequence {
+	private createNoteSequence(): Sequence {
 		const accentNote = 'G2';
 		const beatNote = 'C2';
-		const notes: Tone.SequenceArray = [accentNote, ...new Array(this.beatsPerBar - 1).fill(beatNote)];
-		return new Tone.Sequence((time, note) => {
+		const notes: SequenceArray = [accentNote, ...new Array(this.beatsPerBar - 1).fill(beatNote)];
+		return new Sequence((time, note) => {
 			/* eslint-disable indent */
 			switch (note) {
 				case accentNote:
@@ -223,14 +223,14 @@ export default class App extends Vue {
 		/* eslint-disable indent */
 		switch (this.bpmRamp.rampMode) {
 			case RampMode.Secs:
-				Tone.Transport.bpm.rampTo(this.bpmRamp.to, this.bpmRamp.interval);
+				Transport.bpm.rampTo(this.bpmRamp.to, this.bpmRamp.interval);
 				break;
 			case RampMode.Bars:
-				const loop = new Tone.Loop((time) => {
+				const loop = new Loop((time) => {
 					if (this.bpmIndicatorManager.currentBeat === this.beatsPerBar) {
 						const increase = (this.bpmRamp.to - this.bpmRamp.from) / this.bpmRamp.interval;
-						const bpm = Math.round(Math.max(Math.min(Tone.Transport.bpm.value + increase, this.bpmRamp.to), this.bpmRamp.from));
-						Tone.Transport.bpm.setValueAtTime(bpm, time);
+						const bpm = Math.round(Math.max(Math.min(Transport.bpm.value + increase, this.bpmRamp.to), this.bpmRamp.from));
+						Transport.bpm.setValueAtTime(bpm, time);
 					}
 				}, '4n');
 				loop.start(0);
@@ -242,24 +242,6 @@ export default class App extends Vue {
 		}
 		/* eslint-enable indent */
 	}
-
-	// private _loop(time: number): void {
-	// 	const timeSignatureSubvisions = Array.isArray(Tone.Transport.timeSignature)
-	// 		? Tone.Transport.timeSignature[0]
-	// 		: Tone.Transport.timeSignature;
-	// 	this.currentNote = (this.currentNote % timeSignatureSubvisions) + 1;
-	// 	if (this.currentNote === 1) {
-	// 		this.accent.start(time);
-	// 	} else {
-	// 		this.beat.start(time);
-	// 	}
-	// 	if (this.bpmRamp.rampMode === RampMode.Beats && this.currentNote === timeSignatureSubvisions) {
-	// 		const increase = (this.bpmRamp.to - this.bpmRamp.from) / this.bpmRamp.interval;
-	// 		const bpm = Math.round(Math.max(Math.min(Tone.Transport.bpm.value + increase, this.bpmRamp.to), this.bpmRamp.from));
-	// 		Tone.Transport.bpm.setValueAtTime(bpm, time);
-	// 	}
-	// 	this.bpm = Math.round(Tone.Transport.bpm.value);
-	// }
 }
 </script>
 
